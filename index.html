@@ -166,8 +166,9 @@
 </div>
 
 <footer>Physically accurate geometric ray tracing · Navarro schematic eye (Escudero-Sanz &amp; Navarro 1999) ·
-  NumPy on a Vercel Python function. The 3-D anatomy is schematic; the rays and all numbers are from the real trace.</footer>
+  runs entirely in your browser (no server). The 3-D anatomy is schematic; the rays and all numbers are from the real trace.</footer>
 
+<script src="eyesim.js"></script>
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -397,15 +398,14 @@ function render(out){
 let timer=null;
 function run(){
   sync(); clearTimeout(timer);
-  timer=setTimeout(async()=>{
+  timer=setTimeout(()=>{
     const body={error_D:+$("err").value,pupil:+$("pup").value,use_lens:$("lens").checked,
       use_diffractive:$("diff").checked,material:$("mat").value,design_lam_nm:+$("dw").value,mode};
     $("badge").textContent="tracing…"; document.querySelector("main").classList.add("busy");
-    try{ const r=await fetch("/api/simulate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
-      const out=await r.json(); if(out.error){$("badge").textContent="error: "+out.error;} else render(out);
-    }catch(e){$("badge").textContent="request failed: "+e.message;}
+    try{ render(EyeSim.simulate(body)); }
+    catch(e){ $("badge").textContent="error: "+e.message; console.error(e); }
     document.querySelector("main").classList.remove("busy");
-  }, mode==="Optimize"?250:120);
+  }, 30);
 }
 document.querySelectorAll("#mode button").forEach(b=>b.onclick=()=>{document.querySelectorAll("#mode button").forEach(x=>x.classList.remove("active"));b.classList.add("active");mode=b.dataset.m;run();});
 document.querySelectorAll("#view button").forEach(b=>b.onclick=()=>{document.querySelectorAll("#view button").forEach(x=>x.classList.remove("active"));b.classList.add("active");view=b.dataset.v;buildScene();});
